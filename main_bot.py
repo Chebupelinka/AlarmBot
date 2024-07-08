@@ -16,12 +16,15 @@ def check_is_user_was_there(user_id):
             return True
     return False
 
+
 def update_json(new_data):
     people_data['users'].append(new_data)
     file.seek(0)
     json.dump(people_data, file)
 
 # Создаем объект бота
+
+
 bot = telebot.TeleBot(TOKEN)
 
 
@@ -58,11 +61,14 @@ def start(message):
         markup.add(telebot.types.KeyboardButton(person['name']))
     bot.send_message(message.chat.id, "Выберите человека:", reply_markup=markup)
 
+
 @bot.message_handler(func=lambda message: True)
 def get_text(message):
     return message.text
 
 # Обработчик выбора пользователя
+
+
 @bot.message_handler(func=lambda message: message.text in [person['name'] for person in people_list])
 def send_notification(message):
     chosen_person_name = message.text
