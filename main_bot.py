@@ -35,21 +35,27 @@ def start(message):
 
         name = ""
         group = 0
+        simple_text = ""
 
-        bot.send_message(message.chat.id, "Приветсвую тебя, давай знакомиться! Меня зовут FKIT_ALARM bot. А тебя? "
+        new_msg = bot.send_message(message.chat.id, "Приветсвую тебя, давай знакомиться! Меня зовут FKIT_ALARM bot. А тебя? "
                                                "\n\n\nP.S. Напиши своё настоящее ФИО, чтобы тебя было проще найти!")
-        name = message.text
+        bot.register_next_step_handler(new_msg, get_text(new_msg, ))
+        name = new_msg.text
 
         bot.send_message(message.chat.id, f"Приятно познаомиться, {name}!")
-        bot.send_message(message.chat.id, "А из какой ты группы?")
+
+        new_msg = bot.send_message(message.chat.id, "А из какой ты группы?")
+        bot.register_next_step_handler(new_msg, get_text(new_msg, simple_text))
 
         while True:
             try:
-                group = int(get_text(message))
+                group = int(new_msg.text)
                 break
             except ValueError:
-                bot.send_message(message.chat.id, "Упс, похоже кто-то ввёл неправильно группу, попробуй ещё раз))))"
-                                                       "\n Число должно быть формата int!")
+                bot.send_message(message.chat.id, "Упс, похоже кто-то ввёл неправильно группу, попробуй ещё раз)))"
+                                                       "\nЧисло должно быть формата int!")
+                new_msg = bot.send_message(message.chat.id, "Напиши ещё раз - из какой ты группы")
+                bot.register_next_step_handler(new_msg, get_text(new_msg))
         new_person = {"id": message.from_user.id,
             "name": name,
             "group": group,
@@ -62,9 +68,9 @@ def start(message):
     bot.send_message(message.chat.id, "Выберите человека:", reply_markup=markup)
 
 
-@bot.message_handler(func=lambda message: True)
-def get_text(message):
-    return message.text
+def get_text(message, text):
+    text = message.text
+    bot.send_message(message.chat.id, "I got it!")
 
 # Обработчик выбора пользователя
 
