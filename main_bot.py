@@ -27,25 +27,25 @@ def update_json(new_data):
 
 bot = telebot.TeleBot(TOKEN)
 
+# Вводим глобальные поля на случай, если человек ещё не зарегистрирован
+name = ""
+group = 0
+is_correct = False
+
 
 # Обработчик команды /start
 @bot.message_handler(commands=['start'])
 def start(message):
     if not check_is_user_was_there(message.from_user.id):
 
-        name = ""
-        group = 0
-        simple_text = ""
-
         new_msg = bot.send_message(message.chat.id, "Приветсвую тебя, давай знакомиться! Меня зовут FKIT_ALARM bot. А тебя? "
                                                "\n\n\nP.S. Напиши своё настоящее ФИО, чтобы тебя было проще найти!")
-        bot.register_next_step_handler(new_msg, get_text(new_msg, ))
-        name = new_msg.text
+        bot.register_next_step_handler(new_msg, get_text(new_msg))
 
         bot.send_message(message.chat.id, f"Приятно познаомиться, {name}!")
 
         new_msg = bot.send_message(message.chat.id, "А из какой ты группы?")
-        bot.register_next_step_handler(new_msg, get_text(new_msg, simple_text))
+        bot.register_next_step_handler(new_msg, get_text)
 
         while True:
             try:
@@ -53,9 +53,9 @@ def start(message):
                 break
             except ValueError:
                 bot.send_message(message.chat.id, "Упс, похоже кто-то ввёл неправильно группу, попробуй ещё раз)))"
-                                                       "\nЧисло должно быть формата int!")
+                                                  "\n\n\nЧисло должно быть формата int!")
                 new_msg = bot.send_message(message.chat.id, "Напиши ещё раз - из какой ты группы")
-                bot.register_next_step_handler(new_msg, get_text(new_msg))
+                bot.register_next_step_handler(new_msg, get_text)
         new_person = {"id": message.from_user.id,
             "name": name,
             "group": group,
@@ -68,9 +68,14 @@ def start(message):
     bot.send_message(message.chat.id, "Выберите человека:", reply_markup=markup)
 
 
-def get_text(message, text):
-    text = message.text
-    bot.send_message(message.chat.id, "I got it!")
+def get_text(message):
+    if name == "":
+        text = message.text
+        validate_msg = bot.send_message(message.chat.id, "Проверьте, верно ли вы ввели свои данные?")
+        bot.register_next_step_handler(validate_msg, is_data_correct(validate_msg))
+        if (is_correct == False):
+            other_msg = bot.send_message(message.chat.id, "Напиши своё настоящее ФИО, чтобы тебя было проще найти!")
+
 
 # Обработчик выбора пользователя
 
@@ -85,6 +90,24 @@ def send_notification(message):
     else:
         bot.send_message(message.chat.id, f"{chosen_person_name} не в списке срочно.")
 
+
+# Проверка корректности ввода
+
+def is_data_correct(message):
+        correct_marcup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+        correct_marcup.add(telebot.types.KeyboardButton("Да, всё верно!"))
+        correct_marcup.add(telebot.types.KeyboardButton("Нет, дайте я исправлю!"))
+        bot.send_message(message.chat.id, "Выберите пункт из меню клавиатуры:", reply_markup=correct_marcup)
+
+
+@bot.message_handler(func=lambda message: message.text == "Да, всё верно!")
+def correct(message):
+    is_correct = True
+
+
+@bot.message_handler(func=lambda message: message.text == "Да, всё верно!")
+def correct(message):
+    is_correct = False
 
 # Запускаем бота
 bot.polling()
